@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan QR Code - Self Billing</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            background-color: #ffdd57;
+            color: #333;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        button a {
+            text-decoration: none;
+            color: black;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #reader {
+            width: 300px;
+            margin: 0 auto 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        #result {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .delete-button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .delete-button:hover {
+            background-color: #cc0000;
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-bill, #print-bill * {
+                visibility: visible;
+            }
+            #print-bill {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                box-shadow: none;
+            }
+            #print-bill table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            #print-bill th, #print-bill td {
+                padding: 10px;
+                border: 1px solid #ddd;
+            }
+            #print-bill th {
+                background-color: #f8f9fa;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Scan your item QR</h2>
+    <div id="reader"></div>
+    <p id="result">Scan a QR code</p>
+    <table id="scanned-items">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Price</th>
+                <th>Transaction ID</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be added here dynamically -->
+        </tbody>
+    </table>
+
+    <button type="button" class="login-button" onclick="generateBill()">Print Bill</button>
+    <button type="button" class="checkout-button" ><a href="print.html">Checkout</a></button>
+
+
+    <!-- Hidden Bill for Printing -->
+    <div id="print-bill" style="display: none;">
+        <h2>Bill Receipt</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Price</th>
+                    <th>Transaction ID</th>
+                </tr>
+            </thead>
+            <tbody id="bill-items">
+                <!-- Bill items will be added here dynamically -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2">Total</th>
+                    <td id="bill-total">$0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <script>
+        function onScanSuccess(decodedText) {
+            console.log("Scanned Data:", decodedText); // Debugging log
+
+            try {
+                const billingData = JSON.parse(decodedText);
+                console.log("Parsed Data:", billingData); // Debugging log
+
+                const tableBody = document.querySelector("#scanned-items tbody");
+
+                // Create a new table row
+                const newRow = document.createElement("tr");
+                newRow.innerHTML = `
+                    <td>${billingData.item}</td>
+                    <td>$${billingData.price}</td>
+                    <td>${billingData.transaction_id}</td>
+                    <td><button class="delete-button" onclick="deleteRow(this)">Delete</button></td>
+                `;
+
+                // Append the new row to the table
+                tableBody.appendChild(newRow);
+
+            } catch (error) {
+                console.error("Error parsing QR code data:", error); // Debugging log
+                alert("Invalid QR Code. Please ensure the QR code contains valid JSON data.");
+            }
+        }
+
+        function onScanFailure(error) {
+            console.error("QR Code scan failed:", error); // Debugging log
+        }
+
+        // Function to delete a row
+        function deleteRow(button) {
+            const row = button.closest("tr"); // Get the closest row
+            row.remove(); // Remove the row
+        }
+
+        // Function to generate and print the bill
+        function generateBill() {
+            const scannedItems = document.querySelectorAll("#scanned-items tbody tr");
+            const billItems = document.getElementById("bill-items");
+            const billTotal = document.getElementById("bill-total");
+
+            // Clear previous bill items
+            billItems.innerHTML = "";
+
+            let total = 0;
+
+            // Add scanned items to the bill
+            scannedItems.forEach((row) => {
+                const item = row.cells[0].textContent;
+                const price = parseFloat(row.cells[1].textContent.replace("$", ""));
+                const transactionId = row.cells[2].textContent;
+
+                const billRow = document.createElement("tr");
+                billRow.innerHTML = `
+                    <td>${item}</td>
+                    <td>$${price.toFixed(2)}</td>
+                    <td>${transactionId}</td>
+                `;
+                billItems.appendChild(billRow);
+
+                total += price;
+            });
+
+            // Update the total
+            billTotal.textContent = `$${total.toFixed(2)}`;
+
+            // Show the bill and print it
+            const printBill = document.getElementById("print-bill");
+            printBill.style.display = "block";
+            window.print();
+            printBill.style.display = "none";
+        }
+
+        const html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: 250 }, 
+            onScanSuccess, 
+            onScanFailure
+        ).catch((error) => {
+            console.error("Failed to start QR scanner:", error); // Debugging log
+        });
+    </script>
+
+</body>
+</html>
