@@ -67,35 +67,20 @@ Our self-billing system enables customers to scan products, generate bills, and 
 *Final billing and checkout process.*
 
 
-##### Build Photos
-
-![Team]\(Add photo of your team here)
-
-![Components]\(Add photo of your components here)
-*List all components used.*
-
-![Build]\(Add photos of the build process here)
-*Step-by-step build process explanation.*
-
-![Final]\(Add photo of the final product here)
-*Showcase the final working prototype.*
 
 ### Project Demo
 
 #### Video
 
-[Add your demo video link here]
+https://drive.google.com/file/d/1JuuS7gTJ2CIUz_m7xGNadkQbNZNHefvu/view?usp=drive_link
 *Overview of the working self-billing system.*
 
-#### Additional Demos
-
-[Add any extra demo materials/links]
 
 ## Team Contributions
 
 - **Asna**: UI/UX design and front-end development
-- **Ashna**: Back-end development and database management
-- **Almas**: Hardware integration and testing
+- **Ashna**:  management
+- **Almas**:  integration and testing
 
 ---
 
